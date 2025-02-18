@@ -16,10 +16,8 @@
 #define PWM_MIN_DUTY 0
 
 typedef struct {
-    float desired_speed;
-    float current_speed;
-    float previous_error;
-    float integral;
+    float desired_speed, current_speed;
+    float previous_error, integral;
     int64_t last_pulse_time;
     uint8_t pwm_channel;
     uint8_t hall_pin;
@@ -37,7 +35,28 @@ static motor_state_t right_motor = {
     .hall_pin = RIGHT_HALL
 };
 
+float calculate_pid(motor_state_t* motor, float error, float dt);
+static void update_pwm(uint8_t channel, float pid_output);
+
+float calculate_pid(motor_state_t* motor, float error, float dt) {
+
+    float P = KP * error;
+    motor->integral += error * dt;
+    float I = KI * motor->integral;
+    float D = KD * ((error - motor->previous_error) / dt);
+
+    motor->previous_error = error;
+
+    float pwm_output = P + I + D;
+    if (pwm_output < 0.0f) pwm_output = 0.0f;
+    if (pwm_output > 1.0f) pwm_output = 1.0f;
+
+    return pwm_output;
+}
+
 void app_main(void)
 {
     //test
 }
+
+
