@@ -10,10 +10,10 @@
 #define KI 0.1f
 #define KD 0.05f
 
-#define WHEEL_CIRCUMFERENCE 0.025f  // meters
+#define WHEEL_CIRCUMFERENCE 0.094f  // meters
 #define PULSES_PER_REVOLUTION 2
-#define PWM_MAX_DUTY 100
-#define PWM_MIN_DUTY 0
+#define PWM_MAX_DUTY 1.0f
+#define PWM_MIN_DUTY 0.0f
 
 typedef struct {
     float desired_speed, current_speed;
