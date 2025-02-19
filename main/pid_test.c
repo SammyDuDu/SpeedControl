@@ -9,7 +9,7 @@ float read_input(void);
 void cleanup(void);
 unsigned long get_time_ms(void);
 float generate_noise(float max_noise);
-void simulate_process(void);
+void simulate_process(float max_step_size, float max_noise);
 
 float dt, last_time = 0;
 float integral, previous, output = 0;
@@ -97,19 +97,17 @@ float generate_noise(float max_noise) {
     return (random * 2 * max_noise) - max_noise;
 }
 
-void simulate_process(void) {
+void simulate_process(float max_step_size, float max_noise) {
     FILE *p_output_file, *p_input_file;
     float t, value;
     char line[100];
     
-    // Open datafile.txt for reading
     p_output_file = fopen("datafile.txt", "r");
     if (p_output_file == NULL) {
         printf("Error: Could not open datafile.txt\n");
         return;
     }
     
-    // Open input.txt in append mode
     p_input_file = fopen("input.txt", "a");
     if (p_input_file == NULL) {
         printf("Error: Could not open input.txt\n");
@@ -125,21 +123,23 @@ void simulate_process(void) {
         }
     }
 
-    // Add noise to the last output value
-    float noise = generate_noise(5.0);
+    float noise = generate_noise(max_noise);
     float noisy_value = last_value + noise;
+
+    float step_change = noisy_value - last_value;
     
-    // Clamp the noisy value to a valid range
-    if (noisy_value < 0) noisy_value = 0;
-    if (noisy_value > 255) noisy_value = 255;
+    if (step_change > max_step_size) {
+        noisy_value = last_value + max_step_size;
+    } 
+    else if (step_change < -max_step_size) {
+        noisy_value = last_value - max_step_size;
+    }
     
-    // Append the noisy value to input.txt
     fprintf(p_input_file, "%.2f\n", noisy_value);
-    fflush(p_input_file); // Ensure the data is written immediately
+    fflush(p_input_file);
 
-    printf("Last Value: %.2f, Noise: %.2f, Noisy Value: %.2f\n", last_value, noise, noisy_value);
+    printf("Last Value: %.2f, Noise: %.2f, Noisy Value: %.2f, Integral: %.2f\n", last_value, noise, noisy_value, integral);
 
-    // Close files
     fclose(p_output_file);
     fclose(p_input_file);
 }
@@ -151,9 +151,9 @@ int main(void) {
     setup();
     atexit(cleanup);
     
-    for (int i = 0; i < 99; i++) {
+    for (int i = 0; i < 69; i++) {
         loop();
-        simulate_process();
+        simulate_process(25.0f, 5.0f);
     }
     
     return 0;
